@@ -40,17 +40,21 @@ def encrypt_file_with_caesar(in_file, out_file, offset):
         output_file.write(cipher_text)
     output_file.close()
 
-def build_vigenere_offset_list(cipher):
+def build_vigenere_offset_list(cipher, direction):
+    if direction > 0:
+        direction = 1
+    else :
+        direction = -1
     logging.info("[ENCODE][VIGENERE] Cipher [{}] length [{}]".format(cipher, len(cipher)))
     offset_list = []
     for c in cipher:
         if not c in string.ascii_lowercase:
             logging.error("[VIGENERE_KEY_BUILD] cipher with no alphabet detected!")
-        offset_list.append(ord(c) - ord('a'))
+        offset_list.append(direction * (ord(c) - ord('a')))
     return offset_list
 
-def encode_with_vigenere(plain_text, cipher):
-    offset_list = build_vigenere_offset_list(cipher)
+def encode_with_vigenere(plain_text, cipher, direction = 1):
+    offset_list = build_vigenere_offset_list(cipher, direction)
     offset_list_size = len(offset_list)
     if offset_list_size == 0:
         logging.error("[ENCODE][VIGENERE] cipher length zero!")
@@ -68,7 +72,7 @@ def encode_with_vigenere(plain_text, cipher):
         logging.debug("[ENCODE][VIGENERE] initial {} to {} with offset {}".format(t, out, offset_list[cur_index_for_offset_list]))
     return cipher_text
 
-def encrypt_file_with_vigenere(in_file, out_file, cipher):
+def encrypt_file_with_vigenere(in_file, out_file, cipher, encrypt = 1):
     logging.info("[ENCODE][VIGENERE] Encrypt file [{}] with cipher [{}] into file [{}]".format(
         in_file,
         cipher,
@@ -77,7 +81,7 @@ def encrypt_file_with_vigenere(in_file, out_file, cipher):
     output_file = open(out_file, 'w')
     with open(in_file) as f:
         text = f.read()
-        cipher_text = encode_with_vigenere(text, cipher)
+        cipher_text = encode_with_vigenere(text, cipher, encrypt)
         output_file.write(cipher_text)
     output_file.close()
 
@@ -85,11 +89,20 @@ def test_caesar():
     logging.info("[ENCODE][TEST][CAESAR]Start")
     encrypt_file_with_caesar("plain_text.txt", "encrypt_caesar.txt", 1)
 
+def test_decrypt_caesar():
+    logging.info("[ENCODE][TEST][CAESAR DECRYPT]Start")
+    encrypt_file_with_caesar("encrypt_caesar.txt", "decrypt_caesar.txt", -1)
+
 def test_vigenere():
+    logging.info("[ENCODE][TEST][VIGENERE]Start")
     encrypt_file_with_vigenere("plain_text.txt", "encrypt_vigenere.txt", "bbbc")
 
+def test_decrypt_vigenere():
+    logging.info("[ENCODE][TEST][CAESAR DECRYPT]Start")
+    encrypt_file_with_vigenere("encrypt_vigenere.txt", "decrypt_vigenere.txt", "bbbc", -1)
+
 def main():
-    test_vigenere()
+    test_decrypt_vigenere()
 
 if __name__ == "__main__":
     main()
