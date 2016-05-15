@@ -113,7 +113,7 @@ def main():
     parser.add_argument('-offset', '--encrypt_offset', help='caesar encrypt offset setting', type=int)
 
     args = parser.parse_args()
-    logging.info('[ENCODER] Encode file {} with type {} into file {}'.format(args.in_file, args.out_file, args.encrypt_type))
+    logging.info('[ENCODER] Encode file {} with type {} into file {}'.format(args.in_file, args.encrypt_type, args.out_file))
     if args.encrypt_type == 1:
         if not args.encrypt_offset :
             logging.error('[ENCODER] Encode with caesar needs offset setting!')

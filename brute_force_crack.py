@@ -59,7 +59,7 @@ def prepare_crack_with_caesar():
         return
     top_char = tools.common.calculate_chars(g_cipher_text)
     for tc in TOP_CHAR_IN_ENGLISH:
-        offset = ord(top_char) - ord(tc)
+        offset = ord(tc) - ord(top_char)
         job = CrackJob(offset, "")
         g_working_queue.put(job)
         logging.debug("[CRACKER][CAESAR] Add a job with offset {}".format(offset))
