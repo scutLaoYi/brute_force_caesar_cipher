@@ -3,15 +3,17 @@ import sys
 import io
 import logging
 import string
-logging.basicConfig(format='[%(levelname)s][%(asctime)s] %(message)s', level=logging.DEBUG)
+import tools.common
+
 
 def generate_char_with_offset(origin_char, offset):
+    offset %= tools.common.TOTAL_CHAR_IN_ALPHABET
     code = ord(origin_char) + offset
     # overflow
     if code < ord('a'):
-        code += 26
+        code += tools.common.TOTAL_CHAR_IN_ALPHABET
     if code > ord('z'):
-        code -= 26
+        code -= tools.common.TOTAL_CHAR_IN_ALPHABET
     return chr(code)
 
 def encode_with_caesar(plain_text, offset):

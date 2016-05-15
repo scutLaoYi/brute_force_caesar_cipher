@@ -9,7 +9,8 @@ import threading
 import queue
 import string
 
-logging.basicConfig(format='[%(levelname)s][%(asctime)s] %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='[%(levelname)s][%(asctime)s] %(message)s', level=logging.INFO)
+TOTAL_CHAR_IN_ALPHABET = 26
 
 def calculate_chars(text):
     char_sum = {}

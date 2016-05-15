@@ -63,5 +63,5 @@ def test_score(test_file):
 
 
 if __name__ == '__main__':
-    #test_score("encrypt_caesar.txt")
-    test_score("plain_text.txt")
+    test_score("encrypt_caesar.txt")
+    #test_score("plain_text.txt")
