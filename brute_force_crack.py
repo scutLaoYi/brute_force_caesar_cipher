@@ -5,6 +5,7 @@ import logging
 import encode
 import spell_check
 import queue
+import argparse
 
 TOP_CHAR_IN_ENGLISH = "etaoinsrh"
 g_cipher_text = ""
@@ -12,6 +13,7 @@ g_plain_text = ""
 
 g_working_queue = None
 spell_checker = None
+args = None
 
 class CrackJob:
     def __init__(self, offset, key):
@@ -25,28 +27,29 @@ class CrackThread(threading.Thread):
         logging.info('[CRACKER] Thread start with id {}'.format(id))
     def run(self):
         global g_working_queue
+        global g_plain_text
         while not g_working_queue.empty():
             job = g_working_queue.get()
             if (len(job.key) > 0):
                 logging.info('[CRACKER] ID:{} Type:vigenere Key:{}'.format(self.threadID, job.key))
                 plain_text = encode.encode_with_vigenere(g_cipher_text, job.key, -1)
-                if (spell_checker.score(plain_text) > 90):
-                    logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Success'.format(self.threadID, job.key))
-                    global g_plain_text
+                score = spell_checker.score(plain_text)
+                if (score > 90):
+                    logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Success Score:{}'.format(self.threadID, job.key, score))
                     g_plain_text = plain_text
                     g_working_queue.queue.clear()
                 else:
-                    logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Failed'.format(self.threadID, job.key))
+                    logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Failed Score:{}'.format(self.threadID, job.key, score))
             else:
-                logging.info('[CRACKER] ID:{} Type:caesar Key:{}'.format(self.threadID, job.key))
+                logging.info('[CRACKER] ID:{} Type:caesar offset:{}'.format(self.threadID, job.offset))
                 plain_text = encode.encode_with_caesar(g_cipher_text, job.offset)
-                if (spell_checker.score(plain_text) > 90):
-                    logging.info('[CRACKER] ID:{} Type:caesar offset:{} Result:Success'.format(self.threadID, job.offset))
-                    global g_plain_text
+                score = spell_checker.score(plain_text)
+                if (score > 90):
+                    logging.info('[CRACKER] ID:{} Type:caesar offset:{} Result:Success Score:{}'.format(self.threadID, job.offset, score))
                     g_plain_text = plain_text
                     g_working_queue.queue.clear()
                 else:
-                    logging.info('[CRACKER] ID:{} Type:caesar offset:{} Result:Failed'.format(self.threadID, job.offset))
+                    logging.info('[CRACKER] ID:{} Type:caesar offset:{} Result:Failed Score:{}'.format(self.threadID, job.offset, score))
 
 
 def prepare_crack_with_caesar():
@@ -81,21 +84,22 @@ def prepare_crack_with_vigenere(key_length):
             build_key(depth+1, key_part+cur_key_char)
     build_key(0, "")
 
-def crack_file(filename):
-    logging.info("[CRACK][MAIN] Try to crack file {}".format(filename))
-    with open(filename) as f:
+def crack_file(in_file, out_file):
+    with open(in_file) as f:
         global g_cipher_text
         g_cipher_text = f.read()
-    prepare_crack_with_caesar()
-    prepare_crack_with_vigenere(2)
-    for i in range(0, 4):
+    if args.encrypt_type == 1:
+        prepare_crack_with_caesar()
+    else :
+        prepare_crack_with_vigenere(args.key_length)
+    for i in range(0, args.threads):
         thread = CrackThread(i)
         thread.start()
     while(threading.activeCount() > 1):
         time.sleep(1)
     if (len(g_plain_text) > 0):
         logging.info("[CRACK][MAIN] Success!")
-        with open("output.txt", 'w') as f:
+        with open(out_file, 'w') as f:
             f.write(g_plain_text)
     else :
         logging.info("[CRACK][MAIN] Failed!")
@@ -103,12 +107,28 @@ def crack_file(filename):
 
 def main():
     logging.info("[main] Engine Start!")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--threads', help='thread to crack', type = int)
+    parser.add_argument('-in', '--in_file', help='input file to be crack', type=str)
+    parser.add_argument('-out', '--out_file', help='output file to store result', type=str)
+    parser.add_argument('-dic', '--dictionary', help='dictionary file to check whether crack is success', type=str)
+    parser.add_argument('-type', '--encrypt_type', help='encrypt type config, 1 as caesar, 2 as vigenere', type=int)
+    parser.add_argument('-l', '--key_length', help='key length setting for vigenere crack', type=int)
+    global args
+    args = parser.parse_args()
+    logging.info('[main] try to crack file:{}, with type {}, store into file:{}'.format(args.in_file, args.encrypt_type, args.out_file))
+    if args.encrypt_type == 2 and not args.key_length:
+        logging.error('[main] Error: vigenere encrypt needs key length setting to crack')
+        return
+
     global spell_checker
-    spell_checker = spell_check.SpellChecker("dictionary.txt")
+    spell_checker = spell_check.SpellChecker(args.dictionary)
     global g_working_queue
     g_working_queue = queue.Queue()
-    crack_file("encrypt_caesar.txt")
+
+    crack_file(args.in_file, args.out_file)
     logging.info("[main] Exit!")
+    return
 
 if __name__ == "__main__":
     main()
