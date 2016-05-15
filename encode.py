@@ -3,6 +3,7 @@ import sys
 import io
 import logging
 import string
+import argparse
 import tools.common
 
 
@@ -89,7 +90,7 @@ def encrypt_file_with_vigenere(in_file, out_file, cipher, encrypt = 1):
 
 def test_caesar():
     logging.info("[ENCODE][TEST][CAESAR]Start")
-    encrypt_file_with_caesar("plain_text.txt", "encrypt_caesar.txt", 1)
+    encrypt_file_with_caesar("plain_text.txt", "encrypt_caesar.txt", 5)
 
 def test_decrypt_caesar():
     logging.info("[ENCODE][TEST][CAESAR DECRYPT]Start")
@@ -97,14 +98,38 @@ def test_decrypt_caesar():
 
 def test_vigenere():
     logging.info("[ENCODE][TEST][VIGENERE]Start")
-    encrypt_file_with_vigenere("plain_text.txt", "encrypt_vigenere.txt", "bbbc")
+    encrypt_file_with_vigenere("plain_text.txt", "encrypt_vigenere.txt", "fuck")
 
 def test_decrypt_vigenere():
     logging.info("[ENCODE][TEST][CAESAR DECRYPT]Start")
     encrypt_file_with_vigenere("encrypt_vigenere.txt", "decrypt_vigenere.txt", "bbbc", -1)
 
 def main():
-    test_decrypt_vigenere()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-in', '--in_file', help='input file to be encrypt', type=str)
+    parser.add_argument('-out', '--out_file', help='output file to store result', type=str)
+    parser.add_argument('-type', '--encrypt_type', help='encrypt type config, 1 as caesar, 2 as vigenere', type=int)
+    parser.add_argument('-key', '--encrypt_key', help='vigenere encrypt key setting', type=str)
+    parser.add_argument('-offset', '--encrypt_offset', help='caesar encrypt offset setting', type=int)
+
+    args = parser.parse_args()
+    logging.info('[ENCODER] Encode file {} with type {} into file {}'.format(args.in_file, args.out_file, args.encrypt_type))
+    if args.encrypt_type == 1:
+        if not args.encrypt_offset :
+            logging.error('[ENCODER] Encode with caesar needs offset setting!')
+            return
+        else :
+            logging.info('[ENCODER] Caesar with offset {}'.format(args.encrypt_offset))
+            encrypt_file_with_caesar(args.in_file, args.out_file, args.encrypt_offset)
+    elif args.encrypt_type == 2:
+        if not args.encrypt_key:
+            logging.error('[ENCODER] Encode with vigenere needs key setting!')
+            return
+        else :
+            logging.info('[ENCODER] vigenere with key {}'.format(args.encrypt_key))
+            encrypt_file_with_vigenere(args.in_file, args.out_file, args.encrypt_key)
+    logging.info('[ENCODER] Output into file:{}'.format(args.out_file))
+    return
 
 if __name__ == "__main__":
     main()

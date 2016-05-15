@@ -8,6 +8,7 @@ import queue
 import argparse
 
 TOP_CHAR_IN_ENGLISH = "etaoinsrh"
+#TOP_CHAR_IN_ENGLISH = "etaoi"
 g_cipher_text = ""
 g_plain_text = ""
 
@@ -61,7 +62,7 @@ def prepare_crack_with_caesar():
         offset = ord(top_char) - ord(tc)
         job = CrackJob(offset, "")
         g_working_queue.put(job)
-        logging.info("[CRACKER][CAESAR] Add a job with offset {}".format(offset))
+        logging.debug("[CRACKER][CAESAR] Add a job with offset {}".format(offset))
     return
 
 def prepare_crack_with_vigenere(key_length):
@@ -73,7 +74,7 @@ def prepare_crack_with_vigenere(key_length):
         if (depth == key_length):
             job = CrackJob(0, key_part)
             g_working_queue.put(job)
-            logging.info("[CRACKER][VIGENERE] Add a job with key {}".format(key_part))
+            logging.debug("[CRACKER][VIGENERE] Add a job with key {}".format(key_part))
             return
         top_char = top_char_list[depth]
         for tc in TOP_CHAR_IN_ENGLISH:
