@@ -113,6 +113,34 @@ def encrypt_file_with_vigenere(in_file, out_file, cipher, encrypt = 1):
         output_file.write(cipher_text)
     output_file.close()
 
+def generate_with_formula(t, a, b):
+    if t in string.ascii_lowercase:
+        x = ord(t) - ord('a')
+    else:
+        x = ord(t) - ord('A')
+    y = (a*x + b) % tools.common.TOTAL_CHAR_IN_ALPHABET
+    if t in string.ascii_lowercase:
+        return chr(y+ord('a'))
+    else:
+        return chr(y+ord('A'))
+
+def encode_with_affine(plain_text, a, b):
+    cipher_text = ""
+    for t in plain_text:
+        if not t in string.ascii_letters:
+            cipher_text += t
+            continue
+        cipher_text += generate_with_formula(t, a, b)
+    return cipher_text
+
+def encrypt_file_with_affine(in_file, out_file, a, b):
+    output_file = open(out_file, 'w')
+    with open(in_file) as f:
+        text = f.read()
+        cipher_text = encode_with_affine(text, a, b)
+        output_file.write(cipher_text)
+    output_file.close()
+
 def test_caesar():
     logging.info("[ENCODE][TEST][CAESAR]Start")
     encrypt_file_with_caesar("plain_text.txt", "encrypt_caesar.txt", 5)
@@ -128,6 +156,11 @@ def test_vigenere():
 def test_decrypt_vigenere():
     logging.info("[ENCODE][TEST][CAESAR DECRYPT]Start")
     encrypt_file_with_vigenere("encrypt_vigenere.txt", "decrypt_vigenere.txt", "bbbc", -1)
+
+def test_affine():
+    logging.info("[ENCODE][TEST][AFFINE]Start")
+    encrypt_file_with_affine("plain_text.txt", "encrypt_affine.txt", 11, 5)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -157,7 +190,7 @@ def main():
     return
 
 if __name__ == "__main__":
-    main()
+    test_affine()
 
 
 
