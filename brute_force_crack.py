@@ -7,8 +7,8 @@ import spell_check
 import queue
 import argparse
 
-TOP_CHAR_IN_ENGLISH = "etaoinsrh"
-#TOP_CHAR_IN_ENGLISH = "etaoi"
+#TOP_CHAR_IN_ENGLISH = "etaoinsrh"
+TOP_CHAR_IN_ENGLISH = "etaoi"
 g_cipher_text = ""
 g_plain_text = ""
 

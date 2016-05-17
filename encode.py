@@ -10,18 +10,27 @@ import tools.common
 def generate_char_with_offset(origin_char, offset):
     offset %= tools.common.TOTAL_CHAR_IN_ALPHABET
     code = ord(origin_char) + offset
-    # overflow
-    if code < ord('a'):
-        code += tools.common.TOTAL_CHAR_IN_ALPHABET
-    if code > ord('z'):
-        code -= tools.common.TOTAL_CHAR_IN_ALPHABET
+    if origin_char in string.ascii_lowercase:
+        # overflow
+        if code < ord('a'):
+            code += tools.common.TOTAL_CHAR_IN_ALPHABET
+        if code > ord('z'):
+            code -= tools.common.TOTAL_CHAR_IN_ALPHABET
+    elif origin_char in string.ascii_uppercase:
+        if code < ord('A'):
+            code += tools.common.TOTAL_CHAR_IN_ALPHABET
+        if code > ord('Z'):
+            code -= tools.common.TOTAL_CHAR_IN_ALPHABET
+    else:
+        #Not lower either upper, return initial
+        return origin_char
     return chr(code)
 
 def encode_with_caesar(plain_text, offset):
     cipher_text = ""
     for t in plain_text:
         # ignore all other text
-        if not t in string.ascii_lowercase:
+        if not t in string.ascii_letters:
             cipher_text += t
             continue
         # translate into character
@@ -51,7 +60,7 @@ def build_vigenere_offset_list(cipher, direction):
     logging.info("[ENCODE][VIGENERE] Cipher [{}] length [{}]".format(cipher, len(cipher)))
     offset_list = []
     for c in cipher:
-        if not c in string.ascii_lowercase:
+        if not c in string.ascii_letters:
             logging.error("[VIGENERE_KEY_BUILD] cipher with no alphabet detected!")
         offset_list.append(direction * (ord(c) - ord('a')))
     return offset_list
@@ -65,7 +74,7 @@ def encode_with_vigenere(plain_text, cipher, direction = 1):
     cipher_text = ""
     text_counter = 0
     for t in plain_text:
-        if not t in string.ascii_lowercase:
+        if not t in string.ascii_letters:
             cipher_text += t
             continue
         cur_index_for_offset_list = text_counter % offset_list_size

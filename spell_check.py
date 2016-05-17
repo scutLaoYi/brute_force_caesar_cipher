@@ -8,7 +8,7 @@ import string
 
 #remove everything except alphabet in lowercase
 class Del:
-    def __init__(self, keep=string.ascii_lowercase):
+    def __init__(self, keep=string.ascii_letters):
         self.comp = dict((ord(c),c) for c in keep)
     def __getitem__(self, k):
         return self.comp.get(k)
@@ -63,5 +63,6 @@ def test_score(test_file):
 
 
 if __name__ == '__main__':
-    test_score("encrypt_caesar.txt")
+    build()
+    #test_score("encrypt_caesar.txt")
     #test_score("plain_text.txt")

@@ -17,8 +17,10 @@ def calculate_chars(text):
     top_count = 0
     top_char = None
     for c in text:
-        if c not in string.ascii_lowercase:
+        if c not in string.ascii_letters:
             continue
+        if c in string.ascii_uppercase:
+            c = c.lower()
         if c in char_sum:
             char_sum[c] += 1
         else:
@@ -35,8 +37,10 @@ def calculate_chars_with_group(text, group_size):
         text_list.append("")
     counter = 0
     for c in text:
-        if c not in string.ascii_lowercase:
+        if c not in string.ascii_letters:
             continue
+        if c in string.ascii_uppercase:
+            c = c.lower()
         text_list[counter] += c
         counter += 1
         counter %= group_size
