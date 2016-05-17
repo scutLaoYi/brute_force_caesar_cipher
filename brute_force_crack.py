@@ -33,6 +33,11 @@ class CrackThread(threading.Thread):
             job = g_working_queue.get()
             if (len(job.key) > 0):
                 logging.info('[CRACKER] ID:{} Type:vigenere Key:{}'.format(self.threadID, job.key))
+
+                if (spell_checker.score(encode.encode_with_vigenere(g_cipher_text, job.key, -1, 100)) < 10):
+                    logging.info('[CRACKER] ID:{} Type:vigenere Key:{} failed in pre crack, ignore!'.format(self.threadID, job.key))
+                    continue
+
                 plain_text = encode.encode_with_vigenere(g_cipher_text, job.key, -1)
                 score = spell_checker.score(plain_text)
                 if (score > 90):
@@ -43,6 +48,10 @@ class CrackThread(threading.Thread):
                     logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Failed Score:{}'.format(self.threadID, job.key, score))
             else:
                 logging.info('[CRACKER] ID:{} Type:caesar offset:{}'.format(self.threadID, job.offset))
+                if (spell_checker.score(encode.encode_with_caesar(g_cipher_text, job.offset, 100)) < 1):
+                    logging.info('[CRACKER] ID:{} Type:caesar offset:{} failed in pre crack, ignore!'.format(self.threadID, job.offset))
+                    continue
+
                 plain_text = encode.encode_with_caesar(g_cipher_text, job.offset)
                 score = spell_checker.score(plain_text)
                 if (score > 90):
@@ -89,6 +98,7 @@ def crack_file(in_file, out_file):
     with open(in_file) as f:
         global g_cipher_text
         g_cipher_text = f.read()
+    ts_start = time.time()
     if args.encrypt_type == 1:
         prepare_crack_with_caesar()
     else :
@@ -99,7 +109,8 @@ def crack_file(in_file, out_file):
     while(threading.activeCount() > 1):
         time.sleep(1)
     if (len(g_plain_text) > 0):
-        logging.info("[CRACK][MAIN] Success!")
+        ts_end = time.time()
+        logging.info("[CRACK][MAIN] Success!Time used:{}".format(ts_end-ts_start))
         with open(out_file, 'w') as f:
             f.write(g_plain_text)
     else :

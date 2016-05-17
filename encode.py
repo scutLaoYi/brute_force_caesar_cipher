@@ -26,8 +26,12 @@ def generate_char_with_offset(origin_char, offset):
         return origin_char
     return chr(code)
 
-def encode_with_caesar(plain_text, offset):
+def encode_with_caesar(plain_text, offset, total = -1):
     cipher_text = ""
+    just_part = False
+    if total > 0:
+        just_part = True
+
     for t in plain_text:
         # ignore all other text
         if not t in string.ascii_letters:
@@ -37,6 +41,11 @@ def encode_with_caesar(plain_text, offset):
         out = generate_char_with_offset(t, offset)
         cipher_text += out
         logging.debug("initial {} to {} with offset {}".format(t, out, offset))
+
+        if just_part:
+            total -= 1
+            if total <= 0:
+                break
     return cipher_text
 
 def encrypt_file_with_caesar(in_file, out_file, offset):
@@ -65,7 +74,7 @@ def build_vigenere_offset_list(cipher, direction):
         offset_list.append(direction * (ord(c) - ord('a')))
     return offset_list
 
-def encode_with_vigenere(plain_text, cipher, direction = 1):
+def encode_with_vigenere(plain_text, cipher, direction = 1, total = -1):
     offset_list = build_vigenere_offset_list(cipher, direction)
     offset_list_size = len(offset_list)
     if offset_list_size == 0:
@@ -73,6 +82,9 @@ def encode_with_vigenere(plain_text, cipher, direction = 1):
         return ""
     cipher_text = ""
     text_counter = 0
+    just_part = False
+    if total > 0:
+        just_part = True
     for t in plain_text:
         if not t in string.ascii_letters:
             cipher_text += t
@@ -82,6 +94,10 @@ def encode_with_vigenere(plain_text, cipher, direction = 1):
         cipher_text += out
         text_counter += 1
         logging.debug("[ENCODE][VIGENERE] initial {} to {} with offset {}".format(t, out, offset_list[cur_index_for_offset_list]))
+        if just_part:
+            total -= 1
+            if total <= 0:
+                break
     return cipher_text
 
 def encrypt_file_with_vigenere(in_file, out_file, cipher, encrypt = 1):
