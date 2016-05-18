@@ -156,7 +156,7 @@ def calculate_vigenere_key_length():
     average_match = total_match_sum / MAXIMUM_KEY_LENGTH
     for i in range(1, MAXIMUM_KEY_LENGTH+1):
         #This is a parameter
-        if (match_map[i] - average_match) / average_match > 0.3:
+        if (match_map[i] - average_match) / average_match > 0.2:
             max_match_length = i
             max_match_amount = match_map[i]
             break
@@ -203,9 +203,6 @@ def main():
     global args
     args = parser.parse_args()
     logging.info('[main] try to crack file:{}, with type {}, store into file:{}'.format(args.in_file, args.encrypt_type, args.out_file))
-    if args.encrypt_type == 2 and not args.key_length:
-        logging.error('[main] Error: vigenere encrypt needs key length setting to crack')
-        return
 
     global spell_checker
     spell_checker = spell_check.SpellChecker(args.dictionary)
