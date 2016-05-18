@@ -126,7 +126,7 @@ def generate_with_formula(t, a, b):
         return chr(y+ord('A'))
 
 
-def encode_with_affine(plain_text, a, b, direction = 1):
+def encode_with_affine(plain_text, a, b, direction = 1, total = -1):
     cipher_map = {}
     revert_map = {}
     for c in string.ascii_letters:
@@ -135,6 +135,9 @@ def encode_with_affine(plain_text, a, b, direction = 1):
         revert_map[_c] = c
 
     cipher_text = ""
+    just_part = False
+    if total > 0:
+        just_part = True
     for t in plain_text:
         if not t in string.ascii_letters:
             cipher_text += t
@@ -143,6 +146,10 @@ def encode_with_affine(plain_text, a, b, direction = 1):
             cipher_text += cipher_map[t]
         else :
             cipher_text += revert_map[t]
+        if just_part:
+            total -= 1
+            if total <= 0:
+                break
     return cipher_text
 
 def encrypt_file_with_affine(in_file, out_file, a, b, direction):
@@ -175,7 +182,7 @@ def test_affine():
 
 def test_decode_affine():
     logging.info("[ENCODE][TEST][AFFINE DECRYPT]Start")
-    encrypt_file_with_affine("encrypt_affine.txt", "decrypt_affine.txt", 11, 5, -1)
+    encrypt_file_with_affine("encrypt_affine_a_17_b_25.txt", "decrypt_affine.txt", 17, 25, -1)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -184,6 +191,8 @@ def main():
     parser.add_argument('-type', '--encrypt_type', help='encrypt type config, 1 as caesar, 2 as vigenere', type=int)
     parser.add_argument('-key', '--encrypt_key', help='vigenere encrypt key setting', type=str)
     parser.add_argument('-offset', '--encrypt_offset', help='caesar encrypt offset setting', type=int)
+    parser.add_argument('-a', '--encrypt_a', help='affine encrypt param a setting', type=int)
+    parser.add_argument('-b', '--encrypt_b', help='affine encrypt param b setting', type=int)
 
     args = parser.parse_args()
     logging.info('[ENCODER] Encode file {} with type {} into file {}'.format(args.in_file, args.encrypt_type, args.out_file))
@@ -201,11 +210,21 @@ def main():
         else :
             logging.info('[ENCODER] vigenere with key {}'.format(args.encrypt_key))
             encrypt_file_with_vigenere(args.in_file, args.out_file, args.encrypt_key)
+    elif args.encrypt_type == 3:
+        if not args.encrypt_a or not args.encrypt_b:
+            logging.error('[ENCODER] Encode with affine needs a and b setting!')
+            return
+        if not args.encrypt_a in tools.common.POSSIBLE_A_IN_AFFINE:
+            logging.error('[ENCODER] Encode with affine a illegal !')
+            return
+        logging.info('[ENCODER] affine with a {}, b {}'.format(args.encrypt_a, args.encrypt_b))
+        encrypt_file_with_affine(args.in_file, args.out_file, args.encrypt_a, args.encrypt_b, 1)
+
     logging.info('[ENCODER] Output into file:{}'.format(args.out_file))
     return
 
 if __name__ == "__main__":
-    test_decode_affine()
+    main()
 
 
 

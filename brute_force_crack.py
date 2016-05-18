@@ -18,9 +18,12 @@ spell_checker = None
 args = None
 
 class CrackJob:
-    def __init__(self, offset, key):
+    def __init__(self, offset=0, key="", _type=1, a=0, b=0):
+        self.type = _type
         self.offset = offset
         self.key = key
+        self.a = a
+        self.b = b
 
 class CrackThread(threading.Thread):
     def __init__(self, id):
@@ -32,7 +35,7 @@ class CrackThread(threading.Thread):
         global g_plain_text
         while not g_working_queue.empty():
             job = g_working_queue.get()
-            if (len(job.key) > 0):
+            if job.type == 2:
                 logging.info('[CRACKER] ID:{} Type:vigenere Key:{}'.format(self.threadID, job.key))
 
                 if (spell_checker.score(encode.encode_with_vigenere(g_cipher_text, job.key, -1, 100)) < 30):
@@ -47,7 +50,7 @@ class CrackThread(threading.Thread):
                     g_working_queue.queue.clear()
                 else:
                     logging.info('[CRACKER] ID:{} Type:vigenere Key:{} Result:Failed Score:{}'.format(self.threadID, job.key, score))
-            else:
+            elif job.type == 1:
                 logging.info('[CRACKER] ID:{} Type:caesar offset:{}'.format(self.threadID, job.offset))
                 if (spell_checker.score(encode.encode_with_caesar(g_cipher_text, job.offset, 100)) < 30):
                     logging.info('[CRACKER] ID:{} Type:caesar offset:{} failed in pre crack, ignore!'.format(self.threadID, job.offset))
@@ -61,7 +64,21 @@ class CrackThread(threading.Thread):
                     g_working_queue.queue.clear()
                 else:
                     logging.info('[CRACKER] ID:{} Type:caesar offset:{} Result:Failed Score:{}'.format(self.threadID, job.offset, score))
-
+            elif job.type == 3:
+                logging.info('[CRACKER] ID:{} Type:affine a:{} b:{}'.format(self.threadID, job.a, job.b))
+                if (spell_checker.score(encode.encode_with_affine(g_cipher_text, job.a, job.b, -1, 100)) < 30):
+                    logging.info('[CRACKER] ID:{} Type:affine a:{} b:{} failed in pre crack, ignore'.format(self.threadID, job.a, job.b))
+                    continue
+                plain_text = encode.encode_with_affine(g_cipher_text, job.a, job.b, -1)
+                score = spell_checker.score(plain_text)
+                if (score > 90):
+                    logging.info('[CRACKER] ID:{} Type:affine a:{} b:{} Result:Success Score:{}'.format(self.threadID, job.a, job.b, score))
+                    g_plain_text = plain_text
+                    g_working_queue.queue.clear()
+                else:
+                    logging.info('[CRACKER] ID:{} Type:affine a:{} b:{} Result:Failed, Score:{}'.format(self.threadID, job.a, job.b, score))
+            else:
+                logging.error('[CRACKER] type error, ignore')
 
 def prepare_crack_with_caesar():
     if (len(g_cipher_text) == 0):
@@ -70,7 +87,7 @@ def prepare_crack_with_caesar():
     top_char = tools.common.calculate_chars(g_cipher_text)
     for tc in TOP_CHAR_IN_ENGLISH:
         offset = ord(tc) - ord(top_char)
-        job = CrackJob(offset, "")
+        job = CrackJob(offset=offset, _type=1)
         g_working_queue.put(job)
         logging.debug("[CRACKER][CAESAR] Add a job with offset {}".format(offset))
     return
@@ -82,7 +99,7 @@ def prepare_crack_with_vigenere(key_length):
     top_char_list = tools.common.calculate_chars_with_group(g_cipher_text, key_length)
     def build_key(depth, key_part):
         if (depth == key_length):
-            job = CrackJob(0, key_part)
+            job = CrackJob(key=key_part, _type=2)
             g_working_queue.put(job)
             logging.debug("[CRACKER][VIGENERE] Add a job with key {}".format(key_part))
             return
@@ -94,6 +111,23 @@ def prepare_crack_with_vigenere(key_length):
             cur_key_char = chr(ord('a') + offset)
             build_key(depth+1, key_part+cur_key_char)
     build_key(0, "")
+
+def prepare_crack_with_affine():
+    if (len(g_cipher_text) == 0):
+        logging.error("[CRACKER][CAESAR] Empty cipher text! exit!")
+        return
+    top_char = tools.common.calculate_chars(g_cipher_text)
+    top_char = top_char.lower()
+    top_offset = ord(top_char) - ord('a')
+
+    for p in TOP_CHAR_IN_ENGLISH:
+        for a in tools.common.POSSIBLE_A_IN_AFFINE:
+            for b in range(0, 26):
+                if top_char == encode.generate_with_formula(p, a, b):
+                    job = CrackJob(_type=3, a=a, b=b)
+                    g_working_queue.put(job)
+                    logging.debug("[CRACKER][AFFINE] Add a job with a:{}, b:{}".format(a, b))
+    return
 
 def calculate_vigenere_key_length():
     pure_text = ""
@@ -137,9 +171,12 @@ def crack_file(in_file, out_file):
     ts_start = time.time()
     if args.encrypt_type == 1:
         prepare_crack_with_caesar()
-    else :
+    elif args.encrypt_type == 2:
         key_length = calculate_vigenere_key_length()
         prepare_crack_with_vigenere(key_length)
+    elif args.encrypt_type == 3:
+        prepare_crack_with_affine()
+
     for i in range(0, args.threads):
         thread = CrackThread(i)
         thread.start()
@@ -161,8 +198,8 @@ def main():
     parser.add_argument('-in', '--in_file', help='input file to be crack', type=str)
     parser.add_argument('-out', '--out_file', help='output file to store result', type=str)
     parser.add_argument('-dic', '--dictionary', help='dictionary file to check whether crack is success', type=str)
-    parser.add_argument('-type', '--encrypt_type', help='encrypt type config, 1 as caesar, 2 as vigenere', type=int)
-    parser.add_argument('-l', '--key_length', help='key length setting for vigenere crack', type=int)
+    parser.add_argument('-type', '--encrypt_type', help='encrypt type config, 1 as caesar, 2 as vigenere, 3 as affine', type=int)
+    #parser.add_argument('-l', '--key_length', help='key length setting for vigenere crack', type=int)
     global args
     args = parser.parse_args()
     logging.info('[main] try to crack file:{}, with type {}, store into file:{}'.format(args.in_file, args.encrypt_type, args.out_file))
