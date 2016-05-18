@@ -17,6 +17,7 @@ def calculate_chars(text):
     char_sum = {}
     top_count = 0
     top_char = None
+    total_char = 0
     for c in text:
         if c not in string.ascii_letters:
             continue
@@ -29,6 +30,10 @@ def calculate_chars(text):
         if top_count < char_sum[c]:
             top_count = char_sum[c]
             top_char = c
+        total_char += 1
+    for i in string.ascii_lowercase:
+        if i in char_sum:
+            logging.info("[COMMON TOOL][CHAR CALCULATE] letter:{}, times:{}, frequency:{}".format(i, char_sum[i], char_sum[i]/total_char))
     logging.info("[COMMON TOOL][CHAR CALCULATE] found top char {}, {} times".format(top_char, top_count))
     return top_char
 
