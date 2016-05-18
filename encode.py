@@ -114,6 +114,7 @@ def encrypt_file_with_vigenere(in_file, out_file, cipher, encrypt = 1):
     output_file.close()
 
 def generate_with_formula(t, a, b):
+    x = 0
     if t in string.ascii_lowercase:
         x = ord(t) - ord('a')
     else:
@@ -124,20 +125,31 @@ def generate_with_formula(t, a, b):
     else:
         return chr(y+ord('A'))
 
-def encode_with_affine(plain_text, a, b):
+
+def encode_with_affine(plain_text, a, b, direction = 1):
+    cipher_map = {}
+    revert_map = {}
+    for c in string.ascii_letters:
+        _c = generate_with_formula(c, a, b)
+        cipher_map[c] = _c
+        revert_map[_c] = c
+
     cipher_text = ""
     for t in plain_text:
         if not t in string.ascii_letters:
             cipher_text += t
             continue
-        cipher_text += generate_with_formula(t, a, b)
+        if direction > 0:
+            cipher_text += cipher_map[t]
+        else :
+            cipher_text += revert_map[t]
     return cipher_text
 
-def encrypt_file_with_affine(in_file, out_file, a, b):
+def encrypt_file_with_affine(in_file, out_file, a, b, direction):
     output_file = open(out_file, 'w')
     with open(in_file) as f:
         text = f.read()
-        cipher_text = encode_with_affine(text, a, b)
+        cipher_text = encode_with_affine(text, a, b, direction)
         output_file.write(cipher_text)
     output_file.close()
 
@@ -159,8 +171,11 @@ def test_decrypt_vigenere():
 
 def test_affine():
     logging.info("[ENCODE][TEST][AFFINE]Start")
-    encrypt_file_with_affine("plain_text.txt", "encrypt_affine.txt", 11, 5)
+    encrypt_file_with_affine("plain_text.txt", "encrypt_affine.txt", 11, 5, 1)
 
+def test_decode_affine():
+    logging.info("[ENCODE][TEST][AFFINE DECRYPT]Start")
+    encrypt_file_with_affine("encrypt_affine.txt", "decrypt_affine.txt", 11, 5, -1)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -190,7 +205,7 @@ def main():
     return
 
 if __name__ == "__main__":
-    test_affine()
+    test_decode_affine()
 
 
 
